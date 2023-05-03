@@ -28,13 +28,13 @@ class SoilErosionDataModule(pl.LightningDataModule):
         self.datasets = {name: SoilErosionDataset(name, self.transforms(name)) for name in ['train', 'valid', 'test']}
         
     def train_dataloader(self):
-        return DataLoader(self.datasets['train'], batch_size=self.batch_size, shuffle=False, num_workers=Config.num_workers)
+        return DataLoader(self.datasets['train'], batch_size=self.batch_size, shuffle=True, drop_last=True, num_workers=Config.num_workers)
     
     def val_dataloader(self):
-        return DataLoader(self.datasets['valid'], batch_size=self.batch_size, shuffle=False, num_workers=Config.num_workers)
+        return DataLoader(self.datasets['valid'], batch_size=self.batch_size, shuffle=False, drop_last=True, num_workers=Config.num_workers)
     
     def test_dataloader(self):
-        return DataLoader(self.datasets['test'], batch_size=self.batch_size, shuffle=False, num_workers=Config.num_workers)
+        return DataLoader(self.datasets['test'], batch_size=self.batch_size, shuffle=False, drop_last=True, num_workers=Config.num_workers)
     
     
 class SoilErosionSegmentation(pl.LightningModule):
@@ -62,7 +62,6 @@ class SoilErosionSegmentation(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         loss, outputs, masks = self._common_step(batch, batch_idx)
         predictions = torch.round(torch.sigmoid(outputs))
-        self.IoU.update(predictions, masks)
         
         if batch_idx % self.batch_freq['Train'] == 0:
             self.plot2tb(predictions, outputs, batch, stage='Train')
@@ -72,14 +71,15 @@ class SoilErosionSegmentation(pl.LightningModule):
         return {'loss': loss, 'outputs': outputs, 'masks': masks}
     
     def training_epoch_end(self, outputs):
-        outs = torch.stack([el['outputs'] for el in outputs])
-        masks = torch.stack([el['masks'] for el in outputs])
+        outs = torch.cat([el['outputs'] for el in outputs])
+        masks = torch.cat([el['masks'] for el in outputs])
         predictions = torch.round(torch.sigmoid(outs))
+        
         if self.current_epoch == 0:    
             self.logger.experiment.add_graph(self.model, self.example_input_array.to(self.device))
             
         current_lr = self.optimizers().param_groups[0]['lr']
-        self.log_dict({'train_IoU': self.IoU(predictions, ), 'LR': current_lr}, on_epoch=True, logger=True)
+        self.log_dict({'train_IoU': self.IoU(predictions, masks), 'LR': current_lr}, on_epoch=True, logger=True)
     
     def validation_step(self, batch, batch_idx):
         loss, outputs, masks = self._common_step(batch, batch_idx)
@@ -89,10 +89,20 @@ class SoilErosionSegmentation(pl.LightningModule):
         if batch_idx % self.batch_freq['Validation'] == 0:
             self.plot2tb(predictions, outputs, batch, stage='Validation')
             self.plot_step['Validation'] += 1
-        
+            
+        #self.logger.experiment.add_hparams({
+        #        'lr': Config.learning_rate,
+        #        'batch_size': Config.batch_size,
+        #        'optimizer': type(self.optimizer).__name__,
+        #        'criterion': type(self.criterion).__name__,
+        #        'lr_scheduler': type(self.lr_scheduler).__name__,
+        #    },
+        #    {
+        #        'val_loss': loss,
+        #        'val_IoU': IoU
+        #    })
         self.log_dict({'val_loss': loss, 'val_IoU': IoU}, on_step=True, on_epoch=True, logger=True)
-        return {'loss': loss, 'outputs': outputs, 'masks': masks}
-    
+        
     def test_step(self, batch, batch_idx):
         loss, outputs, masks = self._common_step(batch, batch_idx)
         predictions = torch.round(torch.sigmoid(outputs))
@@ -102,7 +112,6 @@ class SoilErosionSegmentation(pl.LightningModule):
             self.plot2tb(predictions, outputs, batch, stage='Test')
             self.plot_step['Test'] += 1
         
-        self.log_dict({'test_loss': loss, 'test_IoU': IoU}, on_epoch=True, prog_bar=True)
         self.log_dict({'test_loss': loss, 'test_IoU': IoU}, on_step=True, on_epoch=True, logger=True)
         
     def predict_step(self, batch, batch_idx):
