@@ -85,6 +85,8 @@ That's it! With these steps, you should be able to train and use the this soluti
 
 ```
 .
+├── data                  - train/ valid/ test storage
+├── masks                 - satellite image and masks file storage
 ├── models                - place for best models storage 
 ├── settings              - configuration folder
 │   └── config.py         - configuration file with model hyperparameters
@@ -112,19 +114,18 @@ To mitigate these issues, it is essential to have an expert (*because I'm not su
 
 For instance, if an area is incorrectly labeled as eroded soil when it is not, the model may learn to identify features that are not actually indicative of erosion, leading to false positives. On the other hand, if an area of erosion is not labeled, the model may not learn to identify and segment that area, leading to false negatives. These errors can significantly reduce the performance of the model and limit its practical applications.
 
+
+Although the current satellite imagery that we have for our soil erosion model is limited to only RGB channels, it's important to note that there are several other types of imagery that can greatly enhance the model's performance. Some examples include Near-Infrared (NIR), Thermal Infrared (TIR), and Slope, to name a few. Incorporating these additional channels can provide a more detailed view of the terrain and help identify areas of erosion more accurately. It's something to consider for future iterations of the model.
+
 ### Architecture improvements
 
-<hr> 
-Брати дані із більшими каналами, ті цікаві архітектури для супутникових для полів
-Project completion plan (after deadline):
-https://paperswithcode.com/dataset/spacenet-1
-https://paperswithcode.com/dataset/spacenet-2
-https://paperswithcode.com/dataset/cropandweed-dataset
-https://paperswithcode.com/dataset/gid
-https://paperswithcode.com/paper/segmentation-of-roots-in-soil-with-u-net
+The paper [Panoptic Segmentation of Satellite Image Time Series with Convolutional Temporal Attention Networks](https://paperswithcode.com/paper/panoptic-segmentation-of-satellite-image-time) presents a promising approach for panoptic segmentation using their own model, U-TAE, with Spatio-temporal Encoding technique. Although it differs from our task, we can still utilize their pretrained model as it was trained on the same type of data as ours.
 
-https://paperswithcode.com/paper/u-net-convolutional-networks-for-biomedical
-https://paperswithcode.com/method/unet
-https://paperswithcode.com/paper/weakly-supervised-semantic-segmentation-of-1
-https://paperswithcode.com/paper/panoptic-segmentation-of-satellite-image-time
-https://paperswithcode.com/paper/satellite-image-semantic-segmentation
+Similarly, in the research paper [Satellite Image Semantic Segmentation](https://paperswithcode.com/paper/satellite-image-semantic-segmentation), the researchers used UPerNet model with Swin Transformer backbone. We can also consider using their pretrained model, particularly since they provide all their data preprocessing steps.
+
+If there is no opportunity to influence our dataset, we can use a combination of our dataset, [GID (Gaofen Image Dataset)](https://paperswithcode.com/dataset/gid) and one used in [Satellite Image Semantic Segmentation](https://paperswithcode.com/paper/satellite-image-semantic-segmentation) to create an Autoencoder, then pretrain our encoder to solve this type of problem.
+
+
+For better Unet understanding I used:
+- [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://paperswithcode.com/paper/u-net-convolutional-networks-for-biomedical)
+- [UNet++: A Nested U-Net Architecture for Medical Image Segmentation](https://paperswithcode.com/method/unet)
