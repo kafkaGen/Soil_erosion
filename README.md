@@ -19,7 +19,7 @@ In addition to testing different model architectures, I also experimented with s
 ### Final Model
 | Model Architecture | Encoder name | Encoder Depth | Features Maps       | Input Size | Pretrained | Loss               | Optimizer | LR Scheduler                       |
 |--------------------|--------------|---------------|---------------------|------------|------------|--------------------|-----------|------------------------------------|
-| UNet               |efficientnet-b5 | 3             | [512, 256, 128]     | 128x128    | Imagenet   | BCEWithLogitsLoss | AdamW     | CosineAnnealingWarmupRestarts (custom)      |
+| UNet               |efficientnet-b5 | 3             | [512, 256, 128]     | 128x128    | Imagenet   | BCEWithLogitsLoss | RAdam     | CosineAnnealingWarmupRestarts (custom)      |
 
 ### Results
 | Subset | IoU Score|
