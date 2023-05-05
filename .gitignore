@@ -2,3 +2,4 @@ data
 masks
 models
 tb_logs
+!tb_logs/unet_efficientnet-b5_radam_augment

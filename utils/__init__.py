@@ -5,6 +5,7 @@ import math
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
 import numpy as np
+import cv2 as cv
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set()
@@ -23,7 +24,7 @@ def set_seed(seed):
 def get_transforms(subset):
     if subset == 'train':
         transforms = A.Compose([
-            A.Resize(height=Config.resize_to, width=Config.resize_to),
+            A.Resize(height=Config.resize_to, width=Config.resize_to, interpolation=cv.INTER_LINEAR),
             A.OneOf([
                A.ColorJitter(brightness=[0.8, 1.2], hue=0.05),
                A.RandomGamma(gamma_limit=[80, 120], eps=1e-4)

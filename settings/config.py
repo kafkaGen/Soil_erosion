@@ -5,8 +5,7 @@ class Config():
     # Training
     seed = 13
     epochs = 70
-    #learning_rate = 8.317637711026709e-07
-    learning_rate = 1e-3
+    learning_rate = 3e-4
     num_classes = 1
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     accelerator = 'gpu' if torch.cuda.is_available() else 'cpu'
